@@ -11,3 +11,5 @@ po/POTFILES
 src/.deps/
 src/Makefile
 stamp-h1
+src/*.o
+src/hddtemp

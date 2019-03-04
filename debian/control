@@ -1,0 +1,15 @@
+Source: hddtemp
+Section: utils
+Priority: optional
+Maintainer: Aurelien Jarno <aurel32@debian.org>
+Build-Depends: debhelper (>> 10), gettext (>> 0.10.1)
+Standards-Version: 4.1.3
+Homepage: http://www.guzu.net/linux/hddtemp.php
+
+Package: hddtemp
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, lsb-base (>= 3.0-3)
+Description: hard drive temperature monitoring utility
+ The hddtemp program monitors and reports the temperature of PATA, SATA
+ or SCSI hard drives by reading Self-Monitoring Analysis and Reporting
+ Technology (S.M.A.R.T.) information on drives that support this feature.
