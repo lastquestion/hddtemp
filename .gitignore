@@ -1,0 +1,13 @@
+Makefile
+config.h
+config.log
+config.status
+doc/Makefile
+intl/Makefile
+m4/Makefile
+po/Makefile
+po/Makefile.in
+po/POTFILES
+src/.deps/
+src/Makefile
+stamp-h1
