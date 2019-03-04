@@ -1,8 +1,10 @@
-## NOTE
+NOTE
+====
 This is the last version of hddtemp, 0.3beta-15, with every Debian patch up to Sid
 from https://packages.debian.org/sid/hddtemp (-53)
 
-### New features
+New features
+============
 * control the cache interval for daemon down to 2 seconds from default of 60
 
 DESCRIPTION
