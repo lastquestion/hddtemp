@@ -81,17 +81,24 @@ static int sata_probe(int device) {
     return 1;
 }
 
-static const char *sata_model (int device) {
+static struct disk_info sata_info (int device) {
   unsigned char cmd[4] = { WIN_IDENTIFY, 0, 0, 1 };
   unsigned char identify[512];
-  
-  if(device == -1 || sata_pass_thru(device, cmd, identify))
-    return strdup(_("unknown"));
+  struct disk_info info;
+
+  if(device == -1 || sata_pass_thru(device, cmd, identify)) {
+    info.model = strdup(_("unknown"));
+    info.serial_number = strdup(_("unknown"));
+  }
   else
   {
     sata_fixstring(identify + 54, 24);
-    return strdup(identify + 54);
+    sata_fixstring(identify + 20, 20);
+    info.model = strdup(identify + 54);
+    info.serial_number = strdup(identify + 20);
   }
+
+  return info;
 }
 
 static unsigned char* sata_search_temperature(const unsigned char* smart_data, int attribute_id) {
@@ -186,6 +193,6 @@ static enum e_gettemp sata_get_temperature(struct disk *dsk) {
 struct bustype sata_bus = {
   "SATA",
   sata_probe,
-  sata_model,
+  sata_info,
   sata_get_temperature
 };

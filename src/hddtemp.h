@@ -50,13 +50,17 @@ enum e_powermode {
   PWM_STANDBY
 };
 
+struct disk_info {
+  const char * model;
+  const char * serial_number;
+};
 
 struct disk {
   struct disk *            next;
 
   int                      fd;
   const char *             drive;
-  const char *             model;
+  struct disk_info	   info;
   enum e_bustype           type;
   int                      value;
   struct harddrive_entry * db_entry;
@@ -66,10 +70,11 @@ struct disk {
   time_t                   last_time;
 };
 
+
 struct bustype {
   char *name;
   int (*probe)(int);
-  const char *(*model)(int);
+  struct disk_info (*info)(int);
   enum e_gettemp (*get_temperature)(struct disk *);
 };
 

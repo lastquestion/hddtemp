@@ -107,10 +107,10 @@ void daemon_open_sockets(void)
     if (listen(sks_serv[sks_serv_num], 5) == -1) {
       perror("listen");
       for (sks_serv_num-- ; sks_serv_num > 0 ; sks_serv_num--)
-        close(sks_serv[sks_serv_num]);	      
+        close(sks_serv[sks_serv_num]);
       freeaddrinfo(all_ai);
       free(sks_serv);
-      exit(1);	      
+      exit(1);
     }
     
     sks_serv_num++;
@@ -161,41 +161,47 @@ void daemon_send_msg(struct disk *ldisks, int cfd) {
 
     switch(dsk->ret) {
     case GETTEMP_NOT_APPLICABLE:
-      n = snprintf(msg, sizeof(msg), "%s%c%s%cNA%c*",
+      n = snprintf(msg, sizeof(msg), "%s%c%s%c%s%cNA%c*",
                    dsk->drive, separator,
-                   dsk->model, separator,
+                   dsk->info.model, separator,
+                   dsk->info.serial_number, separator,
                    separator);
       break;
     case GETTEMP_UNKNOWN:
-      n = snprintf(msg, sizeof(msg), "%s%c%s%cUNK%c*",
+      n = snprintf(msg, sizeof(msg), "%s%c%s%c%s%cUNK%c*",
                    dsk->drive, separator,
-                   dsk->model, separator, 
-		   separator);
+                   dsk->info.model, separator,
+                   dsk->info.serial_number, separator,
+                   separator);
       break;
     case GETTEMP_KNOWN:
-      n = snprintf(msg, sizeof(msg), "%s%c%s%c%d%c%c",
+      n = snprintf(msg, sizeof(msg), "%s%c%s%c%s%c%d%c%c",
                    dsk->drive,          separator,
-                   dsk->model,          separator,
+                   dsk->info.model,     separator,
+                   dsk->info.serial_number, separator,
                    value_to_unit(dsk),  separator,
                    get_unit(dsk));
       break;
     case GETTEMP_NOSENSOR:
-      n = snprintf(msg, sizeof(msg), "%s%c%s%cNOS%c*",
+      n = snprintf(msg, sizeof(msg), "%s%c%s%c%s%cNOS%c*",
                    dsk->drive, separator,
-                   dsk->model, separator,
+                   dsk->info.model, separator,
+                   dsk->info.serial_number, separator,
                    separator);
       break;
     case GETTEMP_DRIVE_SLEEP:
-      n = snprintf(msg, sizeof(msg), "%s%c%s%cSLP%c*",
+      n = snprintf(msg, sizeof(msg), "%s%c%s%c%s%cSLP%c*",
                    dsk->drive, separator,
-                   dsk->model, separator,
+                   dsk->info.model, separator,
+                   dsk->info.serial_number, separator,
                    separator);
       break;
     case GETTEMP_ERROR:
     default:
-      n = snprintf(msg, sizeof(msg), "%s%c%s%cERR%c*",
+      n = snprintf(msg, sizeof(msg), "%s%c%s%c%s%cERR%c*",
                    dsk->drive,                        separator,
-                   (dsk->model) ? dsk->model : "???", separator,
+                   (dsk->info.model) ? dsk->info.model : "???", separator,
+                   (dsk->info.serial_number) ? dsk->info.serial_number : "???", separator,
                    separator);
       break;
     }
@@ -214,32 +220,36 @@ void daemon_syslog(struct disk *ldisks) {
   for(dsk = ldisks; dsk; dsk = dsk->next) {
     switch(dsk->ret) {
     case GETTEMP_KNOWN:
-      syslog(LOG_INFO, "%s: %s: %d %c", 
+      syslog(LOG_INFO, "%s: %s: %s: %d %c",
              dsk->drive,
-	     dsk->model,
-	     value_to_unit(dsk),
-	     get_unit(dsk));
+             dsk->info.model,
+             dsk->info.serial_number,
+             value_to_unit(dsk),
+             get_unit(dsk));
       break;
     case GETTEMP_DRIVE_SLEEP:
-      syslog(LOG_WARNING, _("%s: %s: drive is sleeping"), 
+      syslog(LOG_WARNING, _("%s: %s: %s: drive is sleeping"),
              dsk->drive,
-	     dsk->model);
+             dsk->info.model,
+             dsk->info.serial_number);
       break;
     case GETTEMP_NOSENSOR:
     case GETTEMP_UNKNOWN:
-      syslog(LOG_WARNING, _("%s: %s: no sensor"), 
+      syslog(LOG_WARNING, _("%s: %s: %s: no sensor"),
              dsk->drive,
-	     dsk->model);
+             dsk->info.model,
+             dsk->info.serial_number);
       break;
     case GETTEMP_NOT_APPLICABLE:
-      syslog(LOG_ERR, "%s: %s: %s", 
+      syslog(LOG_ERR, "%s: %s: %s: %s",
              dsk->drive,
-	     dsk->model,
+             dsk->info.model,
+             dsk->info.serial_number,
              dsk->errormsg);
       break;
     default:
     case GETTEMP_ERROR:
-      syslog(LOG_ERR, "%s: %s", 
+      syslog(LOG_ERR, "%s: %s",
              dsk->drive,
              dsk->errormsg);
       break;

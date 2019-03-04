@@ -155,7 +155,7 @@ static void display_temperature(struct disk *dsk) {
 
   if(dsk->type != ERROR && debug ) {
     printf(_("\n================= hddtemp %s ==================\n"
-	     "Model: %s\n\n"), VERSION, dsk->model);
+             "Model: %s Serial: %s\n\n"), VERSION, dsk->info.model, dsk->info.serial_number);
     /*    return;*/
   }
 
@@ -180,7 +180,7 @@ static void display_temperature(struct disk *dsk) {
     if (numeric && quiet)
       printf("0\n");      
     else
-      printf("%s: %s: %s\n", dsk->drive, dsk->model, dsk->errormsg);
+      printf("%s: %s: %s: %s\n", dsk->drive, dsk->info.model, dsk->info.serial_number, dsk->errormsg);
 
     break;
   case GETTEMP_UNKNOWN:
@@ -195,15 +195,16 @@ static void display_temperature(struct disk *dsk) {
     if (numeric && quiet)
       printf("0\n");      
     else
-      fprintf(stderr, _("%s: %s:  no sensor\n"), dsk->drive, dsk->model);
+      fprintf(stderr, _("%s: %s: %s: no sensor\n"), dsk->drive, dsk->info.model, dsk->info.serial_number);
 
     break;
   case GETTEMP_KNOWN:
 
     if (! numeric)
-       printf("%s: %s: %d%s%c\n",
+       printf("%s: %s: %s: %d%s%c\n",
               dsk->drive,
-              dsk->model,
+              dsk->info.model,
+              dsk->info.serial_number,
 	      value_to_unit(dsk),
               degree,
 	      get_unit(dsk)
@@ -217,18 +218,18 @@ static void display_temperature(struct disk *dsk) {
     if (numeric && quiet)
       printf("0\n");      
     else
-      fprintf(stderr, _("%s: %s: drive is sleeping\n"), dsk->drive, dsk->model);
+      fprintf(stderr, _("%s: %s: %s: drive is sleeping\n"), dsk->drive, dsk->info.model, dsk->info.serial_number);
 
     break;
   case GETTEMP_NOSENSOR:
     if (numeric && quiet)
       printf("0\n");      
     else
-      fprintf(stderr, _("%s: %s:  drive supported, but it doesn't have a temperature sensor.\n"), dsk->drive, dsk->model);
+      fprintf(stderr, _("%s: %s: %s: drive supported, but it doesn't have a temperature sensor.\n"), dsk->drive, dsk->info.model, dsk->info.serial_number);
       
     break;
   default:
-    fprintf(stderr, _("ERROR: %s: %s: unknown returned status\n"), dsk->drive, dsk->model);
+    fprintf(stderr, _("ERROR: %s: %s: %s: unknown returned status\n"), dsk->drive, dsk->info.model, dsk->info.serial_number);
     break;
   }
   free(degree);
@@ -514,7 +515,7 @@ int main(int argc, char* argv[]) {
       continue;
     }
 
-    dsk->model = bus[dsk->type]->model(dsk->fd);
+    dsk->info = bus[dsk->type]->info(dsk->fd);
     dsk->value = -1;
     if(dsk->type != BUS_SCSI) {
       struct harddrive_entry   *dbe;
@@ -525,7 +526,7 @@ int main(int argc, char* argv[]) {
       }      
 
       dsk->db_entry = (struct harddrive_entry *)malloc(sizeof(struct harddrive_entry));
-      dbe = is_a_supported_drive(dsk->model);
+      dbe = is_a_supported_drive(dsk->info.model);
       if(dbe)
 	memcpy(dsk->db_entry, dbe, sizeof(struct harddrive_entry));
       else {

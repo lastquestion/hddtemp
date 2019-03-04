@@ -57,14 +57,19 @@ static int scsi_probe(int device) {
     return 1;
 }
 
-static const char *scsi_model (int device) {
+static struct disk_info scsi_info (int device) {
   unsigned char buf[36];
+  struct disk_info info;
+  info.serial_number = strdup(_("unknown"));
 
-  if (scsi_inquiry(device, buf) != 0)
-    return strdup(_("unknown"));
-  else {
-    return strdup(buf + 8);
+  if (scsi_inquiry(device, buf) != 0) {
+    info.model = strdup(_("unknown"));
   }
+  else {
+    info.model = strdup(buf + 8);
+  }
+
+  return info;
 }
 
 static enum e_gettemp scsi_get_temperature(struct disk *dsk) {
@@ -146,6 +151,6 @@ static enum e_gettemp scsi_get_temperature(struct disk *dsk) {
 struct bustype scsi_bus = {
   "SCSI",
   scsi_probe,
-  scsi_model,
+  scsi_info,
   scsi_get_temperature
 };

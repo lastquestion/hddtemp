@@ -61,11 +61,16 @@ static int ata_probe(int device) {
     return 1;
 }
 
-static const char *ata_model (int device) {
+static struct disk_info ata_info (int device) {
+  struct disk_info info;
+  info.serial_number = strdup(_("unknown"));
+
   if(device == -1 || ioctl(device, HDIO_GET_IDENTITY, sbuff))
-    return strdup(_("unknown"));
+    info.model = strdup(_("unknown"));
   else
-    return strdup((char*) ((u16*)sbuff + 27));
+    info.model = strdup((char*) ((u16*)sbuff + 27));
+
+  return info;
 }
 
 
@@ -160,6 +165,6 @@ static enum e_gettemp ata_get_temperature(struct disk *dsk) {
 struct bustype ata_bus = {
   "PATA",
   ata_probe,
-  ata_model,
+  ata_info,
   ata_get_temperature
 };
