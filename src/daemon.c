@@ -47,8 +47,6 @@
 // Application specific includes
 #include "hddtemp.h"
 
-#define DELAY                  60.0
-
 int                sks_serv_num = 0;
 int *              sks_serv;
 int                stop_daemon = 0;
@@ -132,7 +130,7 @@ void daemon_update(struct disk *ldisks, int nocache) {
   struct disk *      dsk;
 
   for(dsk = ldisks; dsk; dsk = dsk->next) {
-    if(nocache || (difftime(time(NULL), dsk->last_time) > DELAY)) {
+    if(nocache || (difftime(time(NULL), dsk->last_time) > cache_delay)) {
       dsk->value = -1;
 
       if(dsk->type == ERROR)
@@ -261,7 +259,7 @@ void do_daemon_mode(struct disk *ldisks) {
   fd_set             deffds;
   time_t             next_time;
 
-if (!foreground) {
+  if (!foreground) {
     switch(fork()) {
     case -1:
       perror("fork");
@@ -289,10 +287,12 @@ if (!foreground) {
   chdir("/");
   umask(0);
   
-  /* close standard input and output */
-  close(0);
-  close(1);
-  close(2);
+  /* close standard input, output, and error if we are not foreground */
+  if(!foreground) {
+    close(0);
+    close(1);
+    close(2);
+  }
   
   if (tcp_daemon)
     daemon_open_sockets();

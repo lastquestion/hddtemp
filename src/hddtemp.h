@@ -76,7 +76,7 @@ struct bustype {
 
 extern struct bustype *   bus[BUS_TYPE_MAX];
 extern char               errormsg[MAX_ERRORMSG_SIZE];
-extern int                tcp_daemon, debug, quiet, wakeup, af_hint, foreground;
+extern int                tcp_daemon, debug, quiet, wakeup, af_hint, foreground, cache_delay;
 extern char               separator;
 extern long               portnum, syslog_interval;
 extern char *             listen_addr;

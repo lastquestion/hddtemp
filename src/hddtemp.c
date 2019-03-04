@@ -68,6 +68,7 @@
 
 #define PORT_NUMBER            7634
 #define SEPARATOR              '|'
+#define CACHE_DELAY            60
 
 char *             database_path = DEFAULT_DATABASE_PATH;
 long               portnum, syslog_interval;
@@ -75,7 +76,7 @@ char *             listen_addr;
 char               separator = SEPARATOR;
 
 struct bustype *   bus[BUS_TYPE_MAX];
-int                tcp_daemon, debug, quiet, numeric, wakeup, foreground, af_hint;
+int                tcp_daemon, debug, quiet, numeric, wakeup, foreground, af_hint, cache_delay;
 
 static enum { DEFAULT, CELSIUS, FAHRENHEIT } unit;
 
@@ -267,6 +268,7 @@ int main(int argc, char* argv[]) {
   show_db = debug = numeric = quiet = wakeup = af_hint = syslog_interval = foreground = 0;
   unit = DEFAULT;
   portnum = PORT_NUMBER;
+  cache_delay = CACHE_DELAY;
   listen_addr = NULL;
 
   /* Parse command line */
@@ -288,10 +290,11 @@ int main(int argc, char* argv[]) {
       {"unit",       1, NULL, 'u'},
       {"syslog",     1, NULL, 'S'},
       {"wake-up",    0, NULL, 'w'},
+      {"cache-delay",1, NULL, 'c'},
       {0, 0, 0, 0}
     };
  
-    c = getopt_long (argc, argv, "bDdf:l:hp:qs:u:vnw46FS:", long_options, &lindex);
+    c = getopt_long (argc, argv, "bDdf:l:hp:c:qs:u:vnw46FS:", long_options, &lindex);
     if (c == -1)
       break;
     
@@ -336,6 +339,18 @@ int main(int argc, char* argv[]) {
 	  }
 	}
 	break;
+      case 'c':
+	{
+	  char *end = NULL;
+
+	  cache_delay = strtol(optarg, &end, 10);
+
+	  if(errno == ERANGE || end == optarg || *end != '\0' || cache_delay < 2) {
+	    fprintf(stderr, _("ERROR: invalid cache delay.\n"));
+	    exit(1);
+	  }
+	}
+	break;
       case 'u':
 	switch(*optarg) {
 	case 'c':
@@ -360,29 +375,31 @@ int main(int argc, char* argv[]) {
 		 "\n"
 		 "  TYPE could be SATA, PATA or SCSI. If omitted hddtemp will try to guess.\n"
 		 "\n"
-		 "  -b   --drivebase   :  display database file content that allow hddtemp to\n"
-		 "                        recognize supported drives.\n"
-		 "  -D   --debug       :  display various S.M.A.R.T. fields and their values.\n"
-		 "                        Useful to find a value that seems to match the\n"
-		 "                        temperature and/or to send me a report.\n"
-		 "                        (done for every drive supplied).\n"
-		 "  -d   --daemon      :  run hddtemp in TCP/IP daemon mode (port %d by default.)\n"
-		 "  -f   --file=FILE   :  specify database file to use.\n"
-		 "  -F   --foreground  :  don't daemonize, stay in foreground.\n"
-		 "  -l   --listen=addr :  listen on a specific interface (in TCP/IP daemon mode).\n"
-                 "  -n   --numeric     :  print only the temperature.\n"
-		 "  -p   --port=#      :  port to listen to (in TCP/IP daemon mode).\n"
-		 "  -s   --separator=C :  separator to use between fields (in TCP/IP daemon mode).\n"
-		 "  -S   --syslog=s    :  log temperature to syslog every s seconds.\n"
-                 "  -u   --unit=[C|F]  :  force output temperature either in Celsius or Fahrenheit.\n"
-		 "  -q   --quiet       :  do not check if the drive is supported.\n"
-		 "  -v   --version     :  display hddtemp version number.\n"
-		 "  -w   --wake-up     :  wake-up the drive if need.\n"
-		 "  -4                 :  listen on IPv4 sockets only.\n"
-		 "  -6                 :  listen on IPv6 sockets only.\n"
+		 "  -b   --drivebase     :  display database file content that allow hddtemp to\n"
+		 "                          recognize supported drives.\n"
+		 "  -D   --debug         :  display various S.M.A.R.T. fields and their values.\n"
+		 "                          Useful to find a value that seems to match the\n"
+		 "                          temperature and/or to send me a report.\n"
+		 "                          (done for every drive supplied).\n"
+		 "  -d   --daemon        :  run hddtemp in TCP/IP daemon mode (port %d by default.)\n"
+		 "  -f   --file=FILE     :  specify database file to use.\n"
+		 "  -F   --foreground    :  don't daemonize, stay in foreground.\n"
+		 "  -l   --listen=addr   :  listen on a specific interface (in TCP/IP daemon mode).\n"
+		 "  -n   --numeric       :  print only the temperature.\n"
+		 "  -p   --port=#        :  port to listen to (in TCP/IP daemon mode).\n"
+		 "  -s   --separator=C   :  separator to use between fields (in TCP/IP daemon mode).\n"
+		 "  -S   --syslog=s      :  log temperature to syslog every s seconds.\n"
+		 "  -u   --unit=[C|F]    :  force output temperature either in Celsius or Fahrenheit.\n"
+		 "  -q   --quiet         :  do not check if the drive is supported.\n"
+		 "  -v   --version       :  display hddtemp version number.\n"
+		 "  -w   --wake-up       :  wake-up the drive if need.\n"
+		 "  -4                   :  listen on IPv4 sockets only.\n"
+		 "  -6                   :  listen on IPv6 sockets only.\n"
+		 "  -c   --cache-delay=# :  how long the daemon caches tempeature values for, in\n"
+		 "                          seconds. The minimium value is 2. The default is %d.\n"
 		 "\n"
 		 "Report bugs or new drives to <hddtemp@guzu.net>.\n"),
-	       PORT_NUMBER);
+	       PORT_NUMBER, CACHE_DELAY);
 	break; 
       case 'v':
 	printf(_("hddtemp version %s\n"), VERSION);
