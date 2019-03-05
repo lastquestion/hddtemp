@@ -1,0 +1,11 @@
+[Unit]
+Description=HDDTemp Daemon
+After=syslog.target network.target
+
+[Service]
+Type=forking
+ExecStartPre=/bin/bash -c 'systemctl set-environment HDDTEMP_DRIVES="`echo /dev/sd?`"'
+ExecStart=/usr/local/sbin/hddtemp -d $HDDTEMP_DRIVES
+
+[Install]
+WantedBy=multi-user.target
